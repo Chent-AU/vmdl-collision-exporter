@@ -169,7 +169,8 @@ def remove_subfaces(vertices, faces):
 def clean_obj_file(path):
     vertices, faces = extract_data_from_obj(path)
     faces_clean = remove_subfaces(vertices, faces)
-    return generate_obj_text(vertices, faces_clean)
+    unique_faces = remove_duplicate_faces(faces_clean)
+    return generate_obj_text(vertices, unique_faces)
         
 def extract_face_groups(content):
     pattern = r'"faces"\s*"int_array"\s*\[\s*((?:"-?\d+",?\s*)+)\]'
@@ -203,6 +204,19 @@ def generate_obj_text(vertices, faces):
         lines.append(f"f {' '.join(face_indices)}")
 
     return '\n'.join(lines)
+
+def remove_duplicate_faces(faces):
+    seen = set()
+    unique_faces = []
+
+    for face in faces:
+        # Create a normalized tuple of sorted indices to detect duplicates
+        key = tuple(sorted(face))
+        if key not in seen:
+            seen.add(key)
+            unique_faces.append(face)
+
+    return unique_faces
 
 def combine_objs(obj_texts):
     all_faces = []

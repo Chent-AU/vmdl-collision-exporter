@@ -6,3 +6,4 @@ dist/
 *.exe
 *.zip
 *venv
+__pycache__/
