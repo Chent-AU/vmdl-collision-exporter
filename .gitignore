@@ -1,0 +1,8 @@
+build/
+dist/
+*.json
+*.txt
+*.spec
+*.exe
+*.zip
+*venv
