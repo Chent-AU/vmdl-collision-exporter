@@ -1,4 +1,4 @@
-# VMDL_C Convertor
+# VMDL_C Converter
 ### Purpose
 This program was developed to allow easier clipping of prop ramps for CS2 porting. This program allows .vmdl_c files to be converted to obj files, and in the process will merge triangular faces (coplanar faces). These models can then be easily imported using file->import into hammer directly, and then the faces can be used to clip prop ramps very easily.
 
