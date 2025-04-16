@@ -218,12 +218,15 @@ def remove_duplicate_faces(faces):
 
     return unique_faces
 
-def combine_objs(obj_texts):
+def combine_objs(log, obj_texts):
     all_faces = []
 
     vertex_map = {}  # maps vertex tuple -> new global index
     unique_vertices = []
     current_index = 0
+
+    total_original_vertices = 0
+    total_original_faces = 0
 
     for text in obj_texts:
         local_vertices = []
@@ -239,6 +242,9 @@ def combine_objs(obj_texts):
                 parts = line.strip().split()
                 face = [int(p.split('/')[0]) - 1 for p in parts[1:]]  # OBJ is 1-based
                 local_faces.append(face)
+
+        total_original_vertices += len(local_vertices)
+        total_original_faces += len(local_faces)
 
         # Map local vertices to global deduplicated vertices
         remap = {}
@@ -256,6 +262,19 @@ def combine_objs(obj_texts):
                 all_faces.append(new_face)
             except KeyError as e:
                 print(f"[WARN] Face references missing vertex index {e}, skipping face: {face}")
+
+    # Final counts
+    final_vertex_count = len(unique_vertices)
+    final_face_count = len(all_faces)
+
+    logstring = f'Merging {len(obj_texts)} OBJ files.'  + \
+        f'\n    Original Unique Vertices: {total_original_vertices}' + \
+        f'\n    Original Unique Faces: {total_original_vertices}' + \
+        f'\n    Combined Unique Vertices: {final_vertex_count}' + \
+        f'\n    Combined Unique Faces: {final_face_count}' + \
+        f'\n    Merged Vertices: {total_original_vertices - final_vertex_count}' + \
+        f'\n    Merged Faces: {total_original_faces - final_face_count}'
+    log(logstring)
 
     # Reconstruct final obj
     lines = []
@@ -275,6 +294,13 @@ def extract_dmx_paths_from_vmdl(vmdl_path):
     render = [os.path.basename(dmx) for dmx in re.findall(r'RenderMeshFile".*?filename\s*=\s*"([^"]+\.dmx)"', content, re.DOTALL)]
     physics = [os.path.basename(dmx) for dmx in re.findall(r'PhysicsHullFile".*?filename\s*=\s*"([^"]+\.dmx)"', content, re.DOTALL)]
     return render, physics
+
+async def construct_objs_from_vmdls(callback, log, vmdl_paths, base_dir, output_path, merge_threshold=1, use_physics=False, use_render=False, combine_physics_and_render=True):
+    for path in vmdl_paths:
+        construct_obj_from_vmdl(log, path, base_dir, output_path, merge_threshold, use_physics, use_render, combine_physics_and_render)
+        
+    callback(base_dir)
+    
 
 def construct_obj_from_vmdl(log, vmdl_path, base_dir, output_path, merge_threshold=1, use_physics=False, use_render=False, combine_physics_and_render=True):
     basename = os.path.basename(vmdl_path).split('.')[0]
@@ -302,7 +328,7 @@ def construct_obj_from_vmdl(log, vmdl_path, base_dir, output_path, merge_thresho
     
     
     if use_render and len(render_obj_texts) > 0:
-        combined = combine_objs(render_obj_texts)
+        combined = combine_objs(log, render_obj_texts)
         merged_triangles = merge_coplanar_triangles_in_obj(combined, merge_threshold)
         cleaned = clean_obj_file(merged_triangles)
         write_obj(log, cleaned, output_path, basename, '.render')
@@ -310,7 +336,7 @@ def construct_obj_from_vmdl(log, vmdl_path, base_dir, output_path, merge_thresho
         log(f'No render DMX paths found for vmdl: {basename}')
         
     if use_physics and len(physics_obj_texts) > 0:
-        combined = combine_objs(physics_obj_texts)
+        combined = combine_objs(log, physics_obj_texts)
         merged_triangles = merge_coplanar_triangles_in_obj(combined, merge_threshold)
         cleaned = clean_obj_file(merged_triangles)
         write_obj(log, cleaned, output_path, basename, '.physics')
@@ -319,7 +345,7 @@ def construct_obj_from_vmdl(log, vmdl_path, base_dir, output_path, merge_thresho
         
     if combine_physics_and_render and (len(render_obj_texts) > 0 or len(physics_obj_texts) > 0):
         all_objs = physics_obj_texts + render_obj_texts
-        combined = combine_objs(all_objs)
+        combined = combine_objs(log, all_objs)
         merged_triangles = merge_coplanar_triangles_in_obj(combined, merge_threshold)
         cleaned = clean_obj_file(merged_triangles)
         write_obj(log, cleaned, output_path, basename, '.combined')

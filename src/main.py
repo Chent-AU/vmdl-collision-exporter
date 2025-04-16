@@ -3,10 +3,12 @@ from tkinter import filedialog, ttk
 import os
 import json
 import shutil
+import asyncio
+import threading
 
 from modules.file_manager import extract_vmdlc_from_dir, extract_vmdl_from_dir, copy_files_with_index, extract_addons
 from modules.vrf_handler import decomp_vmdl_cs
-from modules.vmdl_handler import construct_obj_from_vmdl
+from modules.vmdl_handler import construct_objs_from_vmdls
 
 selected_models = []
 
@@ -29,6 +31,11 @@ def browse_output(entry):
     if folder:
         entry.delete(0, tk.END)
         entry.insert(0, folder)
+
+def disable(x):
+    x.config(state=tk.DISABLED)
+def enable(x):
+    x.config(state=tk.NORMAL)
 
 def refresh_addons():
     for widget in addon_frame.winfo_children():
@@ -78,7 +85,7 @@ def export_selected():
     if not selected_models or not output_dir or not selected_addon_path.get():
         log("[ERROR] Missing input.")
         return
-
+    disable(exportButton)
     temp_dir = os.path.join(output_dir, '_VMDL_EXTRACTOR_temp')
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
@@ -89,12 +96,20 @@ def export_selected():
     decomp_vmdl_cs(log, temp_dir, temp_dir)
 
     vmdls = extract_vmdl_from_dir(log, temp_dir)
-    for vmdl_path in vmdls:
-        construct_obj_from_vmdl(log, vmdl_path, temp_dir, output_dir, threshold,
-                                use_physics, use_render, use_combined)
+    run_async_in_thread(
+    construct_objs_from_vmdls(on_complete, log, vmdls, temp_dir, output_dir, threshold,
+                              use_physics, use_render, use_combined)
+    )
 
+def on_complete(temp_dir):
     shutil.rmtree(temp_dir)
-    log("Conversion complete.")
+    enable(exportButton)
+    log('\n\n - - - All conversions completed - - - \n\n')
+    
+def run_async_in_thread(coro):
+    def runner():
+        asyncio.run(coro)
+    threading.Thread(target=runner).start()
 
 def on_mousewheel_context(event):
     if hover_target.get() == "addons":
@@ -214,7 +229,8 @@ ttk.Scale(thresh_frame, from_=0.0, to=1.0, orient=tk.HORIZONTAL, variable=thresh
 ttk.Entry(thresh_frame, textvariable=thresh_var, width=5).pack(side='right')
 
 # === EXPORT BUTTON ===
-ttk.Button(main_frame, text="Convert Models", command=export_selected).pack(pady=10)
+exportButton = ttk.Button(main_frame, text="Convert Models", command=export_selected)
+exportButton.pack(pady=10)
 result_label = ttk.Label(main_frame, text="")
 result_label.pack()
 
