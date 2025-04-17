@@ -81,6 +81,8 @@ def export_selected():
     use_physics = physics_var.get()
     use_render = render_var.get()
     use_combined = combined_var.get()
+    snap_enabled = snap_var.get()
+    snap_size = snap_size_var.get() if snap_enabled else None
 
     if not selected_models or not output_dir or not selected_addon_path.get():
         log("[ERROR] Missing input.")
@@ -98,7 +100,7 @@ def export_selected():
     vmdls = extract_vmdl_from_dir(log, temp_dir)
     run_async_in_thread(
     construct_objs_from_vmdls(on_complete, log, vmdls, temp_dir, output_dir, threshold,
-                              use_physics, use_render, use_combined)
+                              use_physics, use_render, use_combined, snap_enabled=snap_enabled, snap_size=snap_size)
     )
 
 def on_complete(temp_dir):
@@ -210,6 +212,17 @@ model_frame.bind("<Configure>", lambda e: model_canvas.configure(scrollregion=mo
 options_group = ttk.LabelFrame(main_frame, text="Export Options", padding=(10, 10))
 options_group.pack(fill=tk.X, pady=(15, 0))
 
+# === Snap to Grid Option ===
+snap_frame = ttk.Frame(options_group)
+snap_frame.pack(anchor='w', pady=(0, 10))
+
+snap_var = tk.BooleanVar(value=False)
+ttk.Checkbutton(snap_frame, text="Snap Vertices to Grid", variable=snap_var).pack(side="left", padx=(0, 10))
+
+snap_values = [0.0625, 0.125, 0.250, 0.500, 1.000]
+snap_size_var = tk.DoubleVar(value=snap_values[0])
+ttk.OptionMenu(snap_frame, snap_size_var, snap_values[0], *snap_values).pack(side="left")
+
 checkbox_frame = ttk.Frame(options_group)
 checkbox_frame.pack(anchor='w', pady=(0, 10))
 
@@ -235,7 +248,7 @@ result_label = ttk.Label(main_frame, text="")
 result_label.pack()
 
 # === Console Output ===
-console_frame = ttk.Frame(content_frame, width=350)
+console_frame = ttk.Frame(content_frame, width=400)
 console_frame.pack(side="right", fill="y")
 ttk.Label(console_frame, text="Console Output:").pack(anchor='nw', padx=5, pady=(10, 0))
 console = tk.Text(console_frame, width=50)

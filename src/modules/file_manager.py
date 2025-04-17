@@ -46,7 +46,6 @@ def extract_gltf_from_dir(log, dir_path):
 
     return gltf_files
 
-
 def copy_files_with_index(log, filepaths, output_dir):
     new_filepaths = []
     for index, file_path in enumerate(filepaths):
@@ -59,3 +58,10 @@ def copy_files_with_index(log, filepaths, output_dir):
         new_filepaths.append(dest_path)
         shutil.copy2(file_path, dest_path)
     return new_filepaths
+
+def write_obj(log, data, base_path, basename, suffix=""):
+    filepath = os.path.join(base_path, basename + suffix + '.obj')
+    log(f'Writing obj file: {basename + suffix + ".obj"}')
+    f = open(filepath, 'w')
+    f.write(data)
+    f.close()
