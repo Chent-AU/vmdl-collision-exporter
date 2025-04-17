@@ -19,7 +19,6 @@ This program was developed to allow easier clipping of prop ramps for CS2 portin
 ### Requirements
 This program uses the CLI version of Source2Viewer to decompile the .vmdl_c files, and thus can only be run on windows.
 It is entirely CPU based, it does not require any raytracing and thus has no GPU requirements.
-Currently the program handles the front end and all of the model processing synchronously so there may be a non-responding period during processing. The program will be updated to handle processing asynchronously at a later release.
 
 ### Guide
 1. Find your base game directory (e.g. "F:/Program Files (x86)/Steam/steamapps/common/Counter-Strike Global Offensive")
