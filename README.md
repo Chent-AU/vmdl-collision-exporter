@@ -38,7 +38,9 @@ Currently the program handles the front end and all of the model processing sync
 
 ![Alt text](https://raw.githubusercontent.com/Chent-AU/vmdl-collision-exporter/refs/heads/main/media/tute-4.PNG)
    
-8. Adjust your export settings. A vmdl may be made up of 2 parts, a physics hull for calculating collisions, and a render hull for appearance, or it may just have a single hull that does both. Typically you will want to export the physics hull for the purpose of clipping, but sometimes the physics hull may not include the entire ramp, or may be missing segments, in which case the combined model can be very useful, but beware it may sometimes have duplicate faces (identical faces on top of one another). The coplanar angle threshhold adjusts how similar two triangular faces have to be to be merged, typically 0.99 is fine, if you export your model and notice the faces are still triangular, try lowering this value.
+8. Adjust your export settings. A vmdl may be made up of 2 parts, a physics hull for calculating collisions, and a render hull for appearance, or it may just have a single hull that does both. Typically you will want to export the physics hull for the purpose of clipping, but sometimes the physics hull may not include the entire ramp, or may be missing segments, in which case the combined model can be very useful, but beware it may sometimes have duplicate faces (identical faces on top of one another).
+   You may select to snap the verticies of the model to a grid size, this can help in removing duplicate faces.
+   The coplanar angle threshhold adjusts how similar two triangular faces have to be to be merged, typically 0.99 is fine, if you export your model and notice the faces are still triangular, try lowering this value.
 
 ![Alt text](https://raw.githubusercontent.com/Chent-AU/vmdl-collision-exporter/refs/heads/main/media/tute-5.PNG)
 
